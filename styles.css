@@ -1,0 +1,106 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+.container {
+    max-width: 1200px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+.logout {
+    text-align: right;
+    margin-bottom: 20px;
+}
+h1, h2 {
+    text-align: center;
+}
+.form-group {
+    margin-bottom: 15px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+.form-actions {
+    text-align: center;
+    margin-top: 20px;
+}
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    margin: 5px;
+}
+.btn:hover {
+    background-color: #0056b3;
+}
+.reservation-table, .car-table, .stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+.reservation-table th, .car-table th, .stats-table th, .reservation-table td, .car-table td, .stats-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+.reservation-table th, .car-table th, .stats-table th {
+    background-color: #f2f2f2;
+}
+.btn-edit {
+    background-color: #ffc107;
+}
+.btn-edit:hover {
+    background-color: #e0a800;
+}
+.btn-delete {
+    background-color: #dc3545;
+}
+.btn-delete:hover {
+    background-color: #c82333;
+}
+@media (max-width: 768px) {
+    .stats-table, .stats-table th, .stats-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .stats-table th, .stats-table td {
+        text-align: right;
+        padding-left: 50%;
+    }
+
+    .stats-table th::before, .stats-table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0;
+        width: 50%;
+        padding-left: 15px;
+        font-weight: bold;
+        text-align: left;
+    }
+
+    .stats-table th, .stats-table td {
+        position: relative;
+        padding: 8px 0;
+    }
+}
