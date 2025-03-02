@@ -4,27 +4,27 @@ include 'db.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = $_POST['username'];
+    $email = $_POST['email'];
     $password = $_POST['password'];
+    $hashed_password = password_hash($password, PASSWORD_BCRYPT);
 
-    $sql = "SELECT id, password, role FROM users WHERE username=?";
+    $sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $username);
-    $stmt->execute();
-    $stmt->store_result();
+    $stmt->bind_param("sss", $username, $email, $hashed_password);
 
-    if ($stmt->num_rows > 0) {
-        $stmt->bind_result($user_id, $hashed_password, $role);
-        $stmt->fetch();
-        if (password_verify($password, $hashed_password)) {
-            $_SESSION['user_id'] = $user_id;
-            $_SESSION['role'] = $role;
-            header("Location: index.php");
-            exit();
-        } else {
-            $error = "Neplatné heslo.";
-        }
+    if ($stmt->execute()) {
+        // Odeslání e-mailu s rekapitulací registrace
+        $subject = "=?UTF-8?B?" . base64_encode("Úspěšná registrace na Drive4u.cz") . "?=";
+        $message = "Dobrý den,\n\nVaše registrace na Drive4u.cz byla úspěšná.\n\nUživatelské jméno: $username\nEmail: $email\n\nDěkujeme za registraci.\n\nS pozdravem,\nTým Drive4u";
+        $headers = "From: info@drive4u.cz\r\n";
+        $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
+        $headers .= "MIME-Version: 1.0\r\n";
+        mail($email, $subject, $message, $headers);
+
+        header("Location: login.php");
+        exit();
     } else {
-        $error = "Neplatné uživatelské jméno.";
+        $error = "Registrace selhala. Zkuste to prosím znovu.";
     }
     $stmt->close();
 }
@@ -36,7 +36,7 @@ $version = trim(file_get_contents('version.txt'));
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <title>Přihlášení</title>
+    <title>Registrace</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -74,6 +74,7 @@ $version = trim(file_get_contents('version.txt'));
             color: #555;
         }
         input[type="text"],
+        input[type="email"],
         input[type="password"] {
             width: 100%;
             padding: 10px;
@@ -107,17 +108,6 @@ $version = trim(file_get_contents('version.txt'));
             font-size: 12px;
             color: #777;
         }
-        .links {
-            margin-top: 20px;
-        }
-        .links a {
-            color: #007BFF;
-            text-decoration: none;
-            margin: 0 10px;
-        }
-        .links a:hover {
-            text-decoration: underline;
-        }
     </style>
 </head>
 <body>
@@ -125,23 +115,23 @@ $version = trim(file_get_contents('version.txt'));
         <div class="logo">
             <img src="logo.png" alt="Logo firmy - Zahu s.r.o.">
         </div>
-        <h2>Přihlášení</h2>
+        <h2>Registrace</h2>
         <?php if (isset($error)) { echo "<p class='error'>$error</p>"; } ?>
-        <form action="login.php" method="post">
+        <form action="register.php" method="post">
             <div class="form-group">
                 <label for="username">Uživatelské jméno:</label>
                 <input type="text" id="username" name="username" required>
             </div>
             <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
                 <label for="password">Heslo:</label>
                 <input type="password" id="password" name="password" required>
             </div>
-            <button type="submit" class="btn">Přihlásit se</button>
+            <button type="submit" class="btn">Registrovat se</button>
         </form>
-        <div class="links">
-            <a href="register.php">Registrace</a>
-            <a href="reset_password.php">Obnova hesla</a>
-        </div>
     </div>
     <div class="footer">
         &copy; <?php echo date("Y"); ?> Zahu s.r.o.. Všechna práva vyhrazena. | Verze <?php echo $version; ?>

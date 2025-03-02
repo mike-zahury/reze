@@ -3,28 +3,28 @@ session_start();
 include 'db.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+    $email = $_POST['email'];
 
-    $sql = "SELECT id, password, role FROM users WHERE username=?";
+    // Generování unikátního tokenu
+    $token = bin2hex(random_bytes(50));
+
+    // Uložení tokenu do databáze s emailem uživatele
+    $sql = "UPDATE users SET reset_token=?, reset_token_expiry=DATE_ADD(NOW(), INTERVAL 1 HOUR) WHERE email=?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $username);
-    $stmt->execute();
-    $stmt->store_result();
+    $stmt->bind_param("ss", $token, $email);
+    if ($stmt->execute()) {
+        // Odeslání emailu pro obnovení hesla
+        $reset_link = "http://rezervace.drive4u.cz/process_reset.php?token=$token";
+        $subject = "=?UTF-8?B?" . base64_encode("Nové heslo pro Drive4U") . "?=";
+        $message = "Klikněte na tento odkaz pro vytvoření nového hesla: $reset_link";
+        $headers = "From: info@drive4u.cz\r\n";
+        $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
+        $headers .= "MIME-Version: 1.0\r\n";
+        mail($email, $subject, $message, $headers);
 
-    if ($stmt->num_rows > 0) {
-        $stmt->bind_result($user_id, $hashed_password, $role);
-        $stmt->fetch();
-        if (password_verify($password, $hashed_password)) {
-            $_SESSION['user_id'] = $user_id;
-            $_SESSION['role'] = $role;
-            header("Location: index.php");
-            exit();
-        } else {
-            $error = "Neplatné heslo.";
-        }
+        $success = "Odkaz pro vytvoření nového hesla byl odeslán na váš email.";
     } else {
-        $error = "Neplatné uživatelské jméno.";
+        $error = "Chyba při odesílání odkazu pro vytvoření nového hesla.";
     }
     $stmt->close();
 }
@@ -36,7 +36,7 @@ $version = trim(file_get_contents('version.txt'));
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <title>Přihlášení</title>
+    <title>Obnova hesla</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -73,8 +73,7 @@ $version = trim(file_get_contents('version.txt'));
             margin-bottom: 5px;
             color: #555;
         }
-        input[type="text"],
-        input[type="password"] {
+        input[type="email"] {
             width: 100%;
             padding: 10px;
             margin-bottom: 20px;
@@ -101,22 +100,15 @@ $version = trim(file_get_contents('version.txt'));
             color: red;
             margin-bottom: 20px;
         }
+        .success {
+            color: green;
+            margin-bottom: 20px;
+        }
         .footer {
             margin-top: 20px;
             text-align: center;
             font-size: 12px;
             color: #777;
-        }
-        .links {
-            margin-top: 20px;
-        }
-        .links a {
-            color: #007BFF;
-            text-decoration: none;
-            margin: 0 10px;
-        }
-        .links a:hover {
-            text-decoration: underline;
         }
     </style>
 </head>
@@ -125,23 +117,16 @@ $version = trim(file_get_contents('version.txt'));
         <div class="logo">
             <img src="logo.png" alt="Logo firmy - Zahu s.r.o.">
         </div>
-        <h2>Přihlášení</h2>
+        <h2>Obnova hesla</h2>
         <?php if (isset($error)) { echo "<p class='error'>$error</p>"; } ?>
-        <form action="login.php" method="post">
+        <?php if (isset($success)) { echo "<p class='success'>$success</p>"; } ?>
+        <form action="reset_password.php" method="post">
             <div class="form-group">
-                <label for="username">Uživatelské jméno:</label>
-                <input type="text" id="username" name="username" required>
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
             </div>
-            <div class="form-group">
-                <label for="password">Heslo:</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-            <button type="submit" class="btn">Přihlásit se</button>
+            <button type="submit" class="btn">Odeslat</button>
         </form>
-        <div class="links">
-            <a href="register.php">Registrace</a>
-            <a href="reset_password.php">Obnova hesla</a>
-        </div>
     </div>
     <div class="footer">
         &copy; <?php echo date("Y"); ?> Zahu s.r.o.. Všechna práva vyhrazena. | Verze <?php echo $version; ?>

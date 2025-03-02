@@ -1,0 +1,2 @@
+- z index.php vyndaná zákaznická sekce do vlastního souboru.
+- oprava drobnosti na grafice co se rozhodila
